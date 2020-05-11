@@ -40,7 +40,11 @@ Search for `Xiaomi Smartfan Card (Smartmi Fan 1x)`
     Replace `fan.entity_id` with your fan's entity_id and `Fan Name` with any name you'd like to name your fan with
 
 ## Preview
-![](preview.gif)
+![](preview/1.png)
+
+![](preview/2.png)
+
+![](preview/3.png)
 
 ## Credits
 [fineemb](https://github.com/fineemb) (Original author)
