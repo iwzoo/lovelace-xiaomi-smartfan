@@ -1,7 +1,7 @@
 class SmartFanXiaomi extends HTMLElement {
     _t(str){
         if( !this.config ) return str;
-        const translate = this.config.translate;
+        const translate = this.config.translate||{};
         if( typeof translate[str] === 'string' ){
             return translate[str];
         }
