@@ -12,11 +12,11 @@ Search for `Xiaomi Smartfan Card (Smartmi Fan 1x)`
 
 ## Manual Installation
 1. Download `smartfan-xiaomi.js`
-1. Copy to `www/community/xiaomi-smart-fan-lovelace/smartfan-xiaomi.js`
+1. Copy to `www/community/xiaomi-smartfan/xiaomi-smartfan.js`
 1. Add the following to your Lovelace resources
     ``` yaml
     resources:
-    - url: /community/xiaomi-smart-fan-lovelace/smartfan-xiaomi.js
+    - url: /community/xiaomi-smartfan/xiaomi-smartfan.js
       type: js
     ```
 1. Add the following to your Lovelace config `views.cards` key
