@@ -16,10 +16,11 @@ class SmartFanXiaomi extends HTMLElement {
 
         let holdStarter = null;
         let holdDelay = 500;
-        
+        this.log(hass);
      
         if(state === undefined){
             if (!this.card) {
+                
                 const card = document.createElement('ha-card');
                 card.className = 'fan-xiaomi';
                 card.appendChild(ui);
@@ -129,7 +130,7 @@ class SmartFanXiaomi extends HTMLElement {
                 }
             }
             
-            ui.querySelector('.var-speed').onmousedown = ()=> {
+            ui.querySelector('.var-speed').addEventListener(('ontouchstart' in document.documentElement?'touchstart' : 'mousedown'), ()=> {
                 holdStarter = setTimeout(_=>{
                     holdStarter = null;
                     this.log('holding...');
@@ -140,15 +141,16 @@ class SmartFanXiaomi extends HTMLElement {
                     });
                     ui.querySelector('.op-row .op.var-rawspeed').classList.toggle('hide');
                 }, holdDelay);
-            }
-            ui.querySelector('.var-speed').onmouseup = ()=> {
+            } );
+
+            ui.querySelector('.var-speed').addEventListener(('ontouchend' in document.documentElement? 'touchend' : 'mouseup'), ()=> {
                 if( holdStarter ){
                     clearTimeout(holdStarter);       
                     holdStarter = null;
                     this.log('clicked');
                     onclick();
                 } 
-            }
+            });
             ui.querySelector('.var-rawspeed .icon-button').onclick = ()=>{
                 ui.querySelector('.op-row .op.var-rawspeed').classList.toggle('hide');
                 const others = ui.querySelectorAll('.op-row .op:not(.toggle');
@@ -205,7 +207,8 @@ class SmartFanXiaomi extends HTMLElement {
                     }
                 }
             }
-            ui.querySelector('.var-oscillating').onmousedown = ()=>{
+            ui.querySelector('.var-oscillating').addEventListener(('ontouchstart' in document.documentElement ? 'touchstart' : 'mousedown') ,(e)=>{
+                
                 holdStarter = setTimeout( _=>{
                     holdStarter = null;
                     this.log('holding oscillate button');
@@ -215,15 +218,16 @@ class SmartFanXiaomi extends HTMLElement {
                     });
                     ui.querySelector('.op-row .op.var-angles').classList.toggle('hide');
                 }, holdDelay);
-            }
-            ui.querySelector('.var-oscillating').onmouseup = ()=>{
+            } );
+            ui.querySelector('.var-oscillating').addEventListener(('ontouchend' in document.documentElement?'touchend' : 'mouseup') , (e)=>{
+             
                 if( holdStarter ){
                     clearTimeout(holdStarter);
                     holdStarter = null;
                     this.log('clicked oscillate button');
-                    // oscillateOnClick();
+                    oscillateOnClick();
                 }
-            }
+            } );
             ui.querySelector('.var-angles .icon-button').onclick = ()=>{
                 ui.querySelector('.op-row .op.var-angles').classList.toggle('hide');
                 const others = ui.querySelectorAll('.op-row .op:not(.toggle');
@@ -560,8 +564,8 @@ to{transform:perspective(10em) rotateY(40deg)}
 
     // 加入日志开关l
     log() {
-         console.log(...arguments)
+//         console.log(...arguments)
     }
 }
 
-customElements.define('smartfan-xiaomi', SmartFanXiaomi);
+customElements.define('smartfan-xiaomi0', SmartFanXiaomi);
