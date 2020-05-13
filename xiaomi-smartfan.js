@@ -171,15 +171,15 @@ class SmartFanXiaomi extends HTMLElement {
             }
 
             ui.querySelector('.var-natural').onclick = () => {
-                //this.log('Natural')
+                this.log('Natural')
                 if (ui.querySelector('.fanbox').classList.contains('active')) {
                     let u = ui.querySelector('.var-natural')
-                    if (u.classList.contains('active') === false) {
+                    if (u.classList.contains('active') === false) {this.log('natural active');
                         u.classList.add('active')
                         hass.callService('fan', 'xiaomi_miio_set_natural_mode_on', {
                             entity_id: entityId
                         });
-                    } else {
+                    } else {this.log('natural deactivate');
                         u.classList.remove('active')
                         hass.callService('fan', 'xiaomi_miio_set_natural_mode_off', {
                             entity_id: entityId
@@ -255,7 +255,7 @@ class SmartFanXiaomi extends HTMLElement {
         //设置值更新UI
         this.setUI(this.card.querySelector('.fan-xiaomi-panel'), {
             title: myname || attrs['friendly_name'],
-            natural_speed: attrs['natural_speed'],
+            natural_speed: attrs['natural_speed']||attrs['mode']==='nature',
             direct_speed: attrs['direct_speed']||attrs['raw_speed'],
             state: state.state,
             child_lock: attrs['child_lock'],
@@ -564,7 +564,7 @@ to{transform:perspective(10em) rotateY(40deg)}
 
     // 加入日志开关l
     log() {
-//         console.log(...arguments)
+        // console.log(...arguments)
     }
 }
 
