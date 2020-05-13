@@ -568,4 +568,4 @@ to{transform:perspective(10em) rotateY(40deg)}
     }
 }
 
-customElements.define('smartfan-xiaomi0', SmartFanXiaomi);
+customElements.define('smartfan-xiaomi', SmartFanXiaomi);
