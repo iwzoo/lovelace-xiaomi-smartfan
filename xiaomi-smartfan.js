@@ -7,6 +7,7 @@ class SmartFanXiaomi extends HTMLElement {
         }
         return str;
     }
+
     set hass(hass) {
         const entityId = this.config.entity;
         const style = this.config.style || '';
@@ -14,8 +15,6 @@ class SmartFanXiaomi extends HTMLElement {
         const state = hass.states[entityId];
         const ui = this.getUI();
 
-        let holdStarter = null;
-        let holdDelay = 500;
         this.log(hass);
      
         if(state === undefined){
@@ -33,6 +32,28 @@ class SmartFanXiaomi extends HTMLElement {
         }
 
         const attrs = state.attributes;
+
+        const onmouseholdclick = (el, clickHandler, holdHandler)=>{
+            const holdDelay = 500;
+            let holdStarter = null;
+            el.addEventListener(('ontouchstart' in document.documentElement?'touchstart' : 'mousedown'), (e)=>{
+                if( e.type==='mousedown' && e.button !=0 ) return;
+                holdStarter = setTimeout(()=>{
+                    holdStarter = null;
+                    if( typeof holdHandler==='function' )
+                        holdHandler(e);
+                }, holdDelay);    
+            });
+
+            el.addEventListener(('ontouchend' in document.documentElement? 'touchend' : 'mouseup'), (e)=>{
+                if( holdStarter ){
+                    clearTimeout(holdStarter);
+                    holdStarter = null;
+                    if( typeof clickHandler==='function' )
+                        clickHandler(e);
+                }
+            });           
+        }
 
         if (!this.card) {
             const card = document.createElement('ha-card');
@@ -109,7 +130,7 @@ class SmartFanXiaomi extends HTMLElement {
                 if (ui.querySelector('.fanbox').classList.contains('active')) {
                     let u = ui.querySelector('.var-speed')
                     let iconSpan = u.querySelector('.icon-waper')
-                    let icon = u.querySelector('.icon-waper > iron-icon')
+                    let icon = u.querySelector('.icon-waper > ha-icon')
                     let newSpeed
                     const found = icon.getAttribute('icon').match(/(mdi:numeric-(\d+)-box-outline)/i);
                     try{
@@ -118,7 +139,7 @@ class SmartFanXiaomi extends HTMLElement {
                             let currentSpeed = Number(found[2]);
                             if( currentSpeed>= speeds.length ) currentSpeed = 0;
                             newSpeed = speeds[currentSpeed];
-                            iconSpan.innerHTML = `<iron-icon icon="mdi:numeric-${currentSpeed+1}-box-outline"></iron-icon>`
+                            iconSpan.innerHTML = `<ha-icon icon="mdi:numeric-${currentSpeed+1}-box-outline"></ha-icon>`
                         }
                     }catch(ex){
                         this.log('Error setting fan speed: ', ex);
@@ -130,26 +151,16 @@ class SmartFanXiaomi extends HTMLElement {
                 }
             }
             
-            ui.querySelector('.var-speed').addEventListener(('ontouchstart' in document.documentElement?'touchstart' : 'mousedown'), ()=> {
-                holdStarter = setTimeout(_=>{
-                    holdStarter = null;
-                    this.log('holding...');
+            onmouseholdclick(ui.querySelector('.var-speed'), ()=>{
+                onclick();
+            }, ()=>{
+                this.log('holding...');
                     
-                    const ops = ui.querySelectorAll('.op-row .op:not(.toggle)');
-                    [].forEach.call(ops, el=>{
-                        el.classList.toggle('hide');
-                    });
-                    ui.querySelector('.op-row .op.var-rawspeed').classList.toggle('hide');
-                }, holdDelay);
-            } );
-
-            ui.querySelector('.var-speed').addEventListener(('ontouchend' in document.documentElement? 'touchend' : 'mouseup'), ()=> {
-                if( holdStarter ){
-                    clearTimeout(holdStarter);       
-                    holdStarter = null;
-                    this.log('clicked');
-                    onclick();
-                } 
+                const ops = ui.querySelectorAll('.op-row .op:not(.toggle)');
+                [].forEach.call(ops, el=>{
+                    el.classList.toggle('hide');
+                });
+                ui.querySelector('.op-row .op.var-rawspeed').classList.toggle('hide');
             });
             ui.querySelector('.var-rawspeed .icon-button').onclick = ()=>{
                 ui.querySelector('.op-row .op.var-rawspeed').classList.toggle('hide');
@@ -207,27 +218,18 @@ class SmartFanXiaomi extends HTMLElement {
                     }
                 }
             }
-            ui.querySelector('.var-oscillating').addEventListener(('ontouchstart' in document.documentElement ? 'touchstart' : 'mousedown') ,(e)=>{
-                
-                holdStarter = setTimeout( _=>{
-                    holdStarter = null;
-                    this.log('holding oscillate button');
-                    const ops = ui.querySelectorAll('.op-row .op:not(.toggle)');
-                    [].forEach.call(ops, el=>{
-                        el.classList.toggle('hide');
-                    });
-                    ui.querySelector('.op-row .op.var-angles').classList.toggle('hide');
-                }, holdDelay);
-            } );
-            ui.querySelector('.var-oscillating').addEventListener(('ontouchend' in document.documentElement?'touchend' : 'mouseup') , (e)=>{
-             
-                if( holdStarter ){
-                    clearTimeout(holdStarter);
-                    holdStarter = null;
-                    this.log('clicked oscillate button');
-                    oscillateOnClick();
-                }
-            } );
+            onmouseholdclick(ui.querySelector('.var-oscillating'), ()=>{
+                this.log('clicked oscillate button');
+                oscillateOnClick();
+            }, ()=>{
+                this.log('holding oscillate button');
+                const ops = ui.querySelectorAll('.op-row .op:not(.toggle)');
+                [].forEach.call(ops, el=>{
+                    el.classList.toggle('hide');
+                });
+                ui.querySelector('.op-row .op.var-angles').classList.toggle('hide');
+
+            });
             ui.querySelector('.var-angles .icon-button').onclick = ()=>{
                 ui.querySelector('.op-row .op.var-angles').classList.toggle('hide');
                 const others = ui.querySelectorAll('.op-row .op:not(.toggle');
@@ -260,7 +262,8 @@ class SmartFanXiaomi extends HTMLElement {
             state: state.state,
             child_lock: attrs['child_lock'],
             oscillating: attrs['oscillating'],
-            led_brightness: attrs['led_brightness'],
+            // led_brightness: attrs['led_brightness'],
+            led: !!attrs['led_brightness']||attrs['led'],
             delay_off_countdown: attrs['delay_off_countdown'],
             angle: attrs['angle']
         })
@@ -337,15 +340,15 @@ p{margin:0;padding:0}
 .c1{top:20%;left:20%;width:60%;height:60%;border:2px solid #fff;border-radius:50%;cursor:pointer;baskground:#ffffff00}
 .c1,.c2{position:absolute;box-sizing:border-box}
 .c2{top:0;left:0;width:100%;height:100%;border:10px solid #f7f7f7;border-radius:50%}
-.c3{position:absolute;top:40%;left:40%;box-sizing:border-box;width:20%;height:20%;border-radius:50%;background:#fff;color:#ddd}
-.c3.active{border:2px solid #8dd5c3}
-.c3 span iron-icon{width:100%;height:100%}
+.c3{position:absolute;top:40%;left:40%;box-sizing:border-box;width:20%;height:20%;border-radius:50%;background:#fff;color:#ddd;border:2px solid #cacaca;}
+.c3.active{border:2px solid #8dd5c3!important;}
+.c3 span ha-icon{width:100%;height:100%}
 .chevron{position:absolute;top:0;height:100%;opacity:0}
 .show{opacity:1}
 .hidden{opacity:0}
 .chevron.left{left:-30px}
 .chevron.right{right:-30px}
-.chevron span,.chevron span iron-icon{width:30px;height:100%}
+.chevron span,.chevron span ha-icon{width:30px;height:100%}
 .hide{display: none}
 
 @keyframes blades{0%{transform:translate(0,0) rotate(0)}
@@ -374,17 +377,17 @@ to{transform:perspective(10em) rotateY(40deg)}
 <div class="c2"></div>
 <div class="c3">
 <span class="icon-waper">
-<iron-icon icon="mdi:power"></iron-icon>
+<ha-icon icon="mdi:power"></ha-icon>
 </span>
 </div>
 <div class="c1"></div>
 <div class="chevron left hidden">
 <span class="icon-waper">
-<iron-icon icon="mdi:chevron-left"></iron-icon>
+<ha-icon icon="mdi:chevron-left"></ha-icon>
 </div>
 <div class="chevron right hidden">
 <span class="icon-waper">
-<iron-icon icon="mdi:chevron-right"></iron-icon>
+<ha-icon icon="mdi:chevron-right"></ha-icon>
 </div>
 </span>
 </div>
@@ -407,7 +410,7 @@ to{transform:perspective(10em) rotateY(40deg)}
 <div class="op var-speed">
 <button>
 <span class="icon-waper">
-<iron-icon icon="mdi:numeric-0-box-outline"></iron-icon>
+<ha-icon icon="mdi:numeric-0-box-outline"></ha-icon>
 </span>
 <span class="btn-title">Speed Level</span>
 </button>
@@ -415,7 +418,7 @@ to{transform:perspective(10em) rotateY(40deg)}
 <div class="op var-oscillating">
 <button>
 <span class="icon-waper">
-<iron-icon icon="mdi:debug-step-over"></iron-icon>
+<ha-icon icon="mdi:debug-step-over"></ha-icon>
 </span>
 <span class="btn-title">Oscillate</span>
 </button>
@@ -423,13 +426,13 @@ to{transform:perspective(10em) rotateY(40deg)}
 <div class="op var-natural">
 <button>
 <span class="icon-waper">
-<iron-icon icon="mdi:leaf"></iron-icon>
+<ha-icon icon="mdi:leaf"></ha-icon>
 </span>
 <span class="btn-title">Natural</span>
 </button>
 </div>
-<div class="op var-rawspeed hide toggle"><output>1</output><span class="icon-button"><iron-icon icon="mdi:chevron-down"></iron-icon></span><input type="range" max="100" min="1" value="1" /></div>
-<div class="op var-angles hide toggle"><span class="icon-button"><iron-icon icon="mdi:chevron-down"></iron-icon></span>
+<div class="op var-rawspeed hide toggle"><output>1</output><span class="icon-button"><ha-icon icon="mdi:chevron-down"></ha-icon></span><input type="range" max="100" min="1" value="-1" /></div>
+<div class="op var-angles hide toggle"><span class="icon-button"><ha-icon icon="mdi:chevron-down"></ha-icon></span>
     <div class="angles">
         
     </div>
@@ -441,7 +444,7 @@ to{transform:perspective(10em) rotateY(40deg)}
 
     // 设置UI值
     setUI(fanboxa, {title, natural_speed, direct_speed, state,
-        child_lock, oscillating, led_brightness, delay_off_countdown, angle
+        child_lock, oscillating, led, delay_off_countdown, angle
     }) {
 
         fanboxa.querySelector('.var-title').textContent = title
@@ -473,13 +476,18 @@ to{transform:perspective(10em) rotateY(40deg)}
 
         // LED
         let activeElement = fanboxa.querySelector('.c3')
-        if (led_brightness < 2) {
-            if (activeElement.classList.contains('active') === false) {
-                activeElement.classList.add('active')
+        if( state=== 'on' ){
+            if (led) {
+                if (activeElement.classList.contains('active') === false) {
+                    activeElement.classList.add('active')
+                }
+            } else {
+                activeElement.classList.remove('active')
+                // div.querySelector('.bg-on').removeChild(div.querySelector('.contaifner'))
             }
         } else {
-            activeElement.classList.remove('active')
-            // div.querySelector('.bg-on').removeChild(div.querySelector('.contaifner'))
+            if( activeElement.classList.contains('active') )
+                activeElement.classList.remove('active')
         }
 
         // State
@@ -488,7 +496,7 @@ to{transform:perspective(10em) rotateY(40deg)}
             if (activeElement.classList.contains('active') === false) {
                 activeElement.classList.add('active')
             }
-        } else {
+        } else  if( activeElement.classList.contains('active') ){
             activeElement.classList.remove('active')
             // div.querySelector('.bg-on').removeChild(div.querySelector('.container'))
         }
@@ -500,14 +508,15 @@ to{transform:perspective(10em) rotateY(40deg)}
             if (activeElement.classList.contains('active') === false) {
                 activeElement.classList.add('active')
             }
-        } else {
+        } else if( activeElement.classList.contains('active') ){
             activeElement.classList.remove('active')
-            // iconSpan.innerHTML = '<iron-icon icon="mdi:numeric-0-box-outline"></iron-icon>'
+            // iconSpan.innerHTML = '<ha-icon icon="mdi:numeric-0-box-outline"></ha-icon>'
         }
         let direct_speed_int = Number(direct_speed)
         
         const speedValues = this.speedValues();
         try{
+            if( fanboxa.querySelector('.op-row .var-rawspeed input[type="range"]').value === direct_speed_int ) throw '';
             fanboxa.querySelector('.op-row .var-rawspeed input[type="range"]').value = direct_speed_int;
             fanboxa.querySelector('.op-row .var-rawspeed input[type="range"]').dispatchEvent(new Event('input', {
                 bubbles: true,
@@ -517,7 +526,7 @@ to{transform:perspective(10em) rotateY(40deg)}
             speedValues.sort((a, b)=>{ return (a<b?(a==b?0:1):-1);}).forEach( (v, index, arr)=>{
                 if(  direct_speed_int >= v ) {
                     this.log('current speed: ', direct_speed_int, ' index: ', index, v, arr);
-                    iconSpan.innerHTML = `<iron-icon icon="mdi:numeric-${arr.length- index}-box-outline"></iron-icon>`
+                    iconSpan.innerHTML = `<ha-icon icon="mdi:numeric-${arr.length- index}-box-outline"></ha-icon>`
                     throw '';
                 }
             });
@@ -530,7 +539,7 @@ to{transform:perspective(10em) rotateY(40deg)}
             if (activeElement.classList.contains('active') === false) {
                 activeElement.classList.add('active')
             }
-        } else {
+        } else if( activeElement.classList.contains('active') ){
             activeElement.classList.remove('active')
         }
 
@@ -545,8 +554,10 @@ to{transform:perspective(10em) rotateY(40deg)}
                 activeElement.classList.add('active')
             }
         } else {
-            activeElement.classList.remove('active')
-            fb.classList.remove('oscillation')
+            if( activeElement.classList.contains('active') )
+                activeElement.classList.remove('active')
+            if( fb.classList.contains('oscillation') )
+                fb.classList.remove('oscillation')
         }
     }
 /*********************************** UI设置 ************************************/
@@ -567,5 +578,6 @@ to{transform:perspective(10em) rotateY(40deg)}
         // console.log(...arguments)
     }
 }
+
 
 customElements.define('smartfan-xiaomi', SmartFanXiaomi);
