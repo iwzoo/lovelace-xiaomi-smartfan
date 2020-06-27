@@ -43,7 +43,8 @@ Xiaomi Smartmi Fan Lovelace card for HASS/Home Assistant.
         Timer:
     ```
     Replace `fan.entity_id` with your fan's entity_id and `Fan Name` with any name you'd like to name your fan with
-
+    
+    
 
 # 小米风扇1x lovelace卡片
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
